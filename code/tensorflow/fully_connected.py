@@ -116,21 +116,43 @@ with graph.as_default():
     tf_valid_dataset = tf.constant(valid_dataset)
     tf_test_dataset = tf.constant(test_dataset)
     
-    ## Variables
-    weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
-    biases = tf.Variable(tf.zeros([num_labels]))
+#     ## Variables
+#     weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
+#     biases = tf.Variable(tf.zeros([num_labels]))
+#     
+#     ## Training computation
+#     logits = tf.matmul(tf_train_dataset, weights) + biases
+#     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
     
-    ## Training computation
-    logits = tf.matmul(tf_train_dataset, weights) + biases
+    ## Now: Change to one-layer NN
+    ## Variables
+    hidden_layer_size = 1024
+    weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
+    biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
+    hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
+    
+    ## Output layer
+    weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
+    biases_o = tf.Variable(tf.zeros([num_labels]))
+    logits = tf.matmul(hidden, weights_o) + biases_o
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+    ## END CHANGE
     
     ## Optimizer
     optimizer = tf.train.GradientDescentOptimizer(0.50).minimize(loss)
     
     ## Prediction for training, validation and test data
     train_pred = tf.nn.softmax(logits)
-    valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
-    test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
+#     valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
+#     test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
+    
+    valid_hidden = tf.nn.relu(tf.matmul(tf_valid_dataset, weights_h) + biases_h)
+    valid_logits = tf.matmul(valid_hidden, weights_o) + biases_o
+    valid_pred = tf.nn.softmax(valid_logits)
+    
+    test_hidden = tf.nn.relu(tf.matmul(tf_test_dataset, weights_h) + biases_h)
+    test_logits = tf.matmul(test_hidden, weights_o) + biases_o
+    test_pred = tf.nn.softmax(test_logits)
 
 ## Let's run it
 num_steps = 3001
@@ -155,10 +177,3 @@ with tf.Session(graph=graph) as session:
             print 'Mini-batch accuracy: %.1f%%' % accuracy(pred, batch_labels)
             print 'Validation accuracy: %.1f%%' % accuracy(valid_pred.eval(), valid_labels)
     print 'Test accuracy: %.1f%%' % accuracy(test_pred.eval(), test_labels)
-
-
-
-
-
-
-
