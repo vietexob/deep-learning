@@ -8,17 +8,12 @@ Train a skip-gram model on Text8 data and visualize the output.
 
 import collections
 import zipfile
-import urllib
 import random
 import math
-import os
-
 from sklearn.manifold import TSNE
 from matplotlib import pylab
 import tensorflow as tf
 import numpy as np
-from numpy import dtype
-from sklearn.semi_supervised.label_propagation import LabelSpreading
 
 ## Read the data into a string
 def read_data(filename):
