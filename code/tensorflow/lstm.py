@@ -257,13 +257,12 @@ with tf.Session(graph=graph) as session:
                 print '=' * 80
                 for _ in xrange(5):
                     feed = sample(random_distribution())
-                    ## TODO: This causes runtime error
-                    sentence = BatchGenerator.characters(feed)[0]
+                    sentence = train_batches.characters(feed)[0]
                     reset_sample_state.run()
                     for _ in xrange(79):
                         prediction = sample_prediction.eval({sample_input: feed})
                         feed = sample(prediction)
-                        sentence += BatchGenerator.characters(feed)[0]
+                        sentence += train_batches.characters(feed)[0]
                     print sentence
                 print '=' * 80
             ## Measure validation set perplexity
