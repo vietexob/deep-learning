@@ -1,7 +1,7 @@
 rm(list = ls())
 
 actions <- c("N", "S", "E", "W")
-## Gridworld is of dimension 3x4 ?
+## Gridworld is of dimension 3x4
 x <- 1:4
 y <- 1:3
 
