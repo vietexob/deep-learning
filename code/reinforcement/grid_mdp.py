@@ -37,6 +37,7 @@ def build_environment(nrow=3, ncol=4):
     values = rewards
     ## The set of states are the grid cells
     states = product(range(nrow), range(ncol))
+    print max(states)
 #     for state in states:
 #         print state
     ## Create the transition probabilities
@@ -47,13 +48,20 @@ def build_environment(nrow=3, ncol=4):
     transition['W'] = [0.1, 0.1, 0, 0.8]
     
     ## The value of an action
+    action_values = {}
+    action_values['N'] = [0, 1] # x, y
+    action_values['S'] = [0, -1]
+    action_values['E'] = [-1, 0]
+    action_values['W'] = [1, 0]
     
     return rewards, values, states, transition
     
-def act(action, state):
+def act(action_values, action, states, state):
     '''
     Moves the agent through the states based on action taken.
     '''
+    action_value = action_values[action]
+    new_state = state
     
 if __name__ == '__main__':
     params = parse()

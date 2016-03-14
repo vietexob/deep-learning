@@ -31,7 +31,7 @@ act <- function(action, state) {
   action.value <- action.values[[action]]
   new.state <- state
   if((state["x"] == 4 && state["y"] == 1) || (state["x"] == 4 && state["y"] == 2)) {
-    # Reached the goal
+    # Reached the goal or the dead state
     return(state)
   }
   
