@@ -45,8 +45,15 @@ def build_environment(nrow=3, ncol=4):
     transition['S'] = [0, 0.8, 0.1, 0.1]
     transition['E'] = [0.1, 0.1, 0.8, 0]
     transition['W'] = [0.1, 0.1, 0, 0.8]
-    print transition
     
+    ## The value of an action
+    
+    return rewards, values, states, transition
+    
+def act(action, state):
+    '''
+    Moves the agent through the states based on action taken.
+    '''
     
 if __name__ == '__main__':
     params = parse()
