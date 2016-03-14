@@ -26,10 +26,10 @@ def build_environment(nrow=3, ncol=4):
     ## Set the initial rewards
     rewards = np.zeros(shape=(nrow, ncol))
     ## Coordinates of the 'wall'
-    wall_r = int(nrow / 2)
-    wall_c = int(ncol / 2) - 1
+    wall_row = int(nrow / 2)
+    wall_col = int(ncol / 2) - 1
     ## Set the reward values
-    rewards[wall_r, wall_c] = None
+    rewards[wall_row, wall_col] = None
     rewards[0, ncol-1] = 1 # the goal
     rewards[1, ncol-1] = -1 # the trap
     
@@ -37,7 +37,8 @@ def build_environment(nrow=3, ncol=4):
     values = rewards
     ## The set of states are the grid cells
     states = product(range(nrow), range(ncol))
-    print max(states)
+    states = list(states) # convert iterator to list
+#     print rewards[max(states)]
 #     for state in states:
 #         print state
     ## Create the transition probabilities
@@ -49,20 +50,38 @@ def build_environment(nrow=3, ncol=4):
     
     ## The value of an action
     action_values = {}
-    action_values['N'] = [0, 1] # x, y
-    action_values['S'] = [0, -1]
-    action_values['E'] = [-1, 0]
-    action_values['W'] = [1, 0]
+    action_values['N'] = [-1, 0] # x, y
+    action_values['S'] = [1, 0]
+    action_values['E'] = [0, 1]
+    action_values['W'] = [0, -1]
     
     return rewards, values, states, transition
     
-def act(action_values, action, states, state):
+def act(action_values, action, states, state, rewards):
     '''
     Moves the agent through the states based on action taken.
     '''
     action_value = action_values[action]
     new_state = state
+    goal_row = 0
+    goal_col = max(states)[1]
+    trap_row = 1
+    trap_col = max(states)[1]
+    if (state[0] == goal_row and state[1] == goal_col) or (state[0] == trap_row and state[1] == trap_col):
+        ## Reached the goal or the trap
+        return state
+    new_row = state[0] + action_value[0]
+    new_col = state[1] + action_value[1]
     
+    ## Constrained by the edge of the grid
+    new_state[0] = min(max(states)[0], max(0, new_row))
+    new_state[1] = min(max(states)[1], max(0, new_col))
+    
+    if rewards[new_state] is None:
+        new_state = state
+    
+    return new_state
+
 if __name__ == '__main__':
     params = parse()
     nrow = params['nrow']
