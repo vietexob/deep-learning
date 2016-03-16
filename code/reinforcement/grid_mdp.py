@@ -82,6 +82,11 @@ def act(action_values, action, states, state, rewards):
     
     return new_state
 
+def bellman_update(action, transition, state, values, gamma=1):
+    trans_prob = transition[action]
+    q = [0] * len(trans_prob)
+    return sum(q)
+
 if __name__ == '__main__':
     params = parse()
     nrow = params['nrow']
