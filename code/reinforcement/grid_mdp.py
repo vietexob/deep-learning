@@ -82,9 +82,12 @@ def act(action_values, action, states, state, rewards):
     
     return new_state
 
-def bellman_update(action, transition, state, values, gamma=1):
+def bellman_update(action, transition, state, rewards, values, gamma=1):
     trans_prob = transition[action]
     q = [0] * len(trans_prob)
+    for i in range(len(trans_prob)):
+        next_state = act(action_values, action, states, state, rewards)
+        q[i] = trans_prob[i] * (rewards[state[0], state[1]] + gamma * values[])
     return sum(q)
 
 if __name__ == '__main__':
