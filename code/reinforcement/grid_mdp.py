@@ -24,6 +24,7 @@ def parse():
     
 def build_environment(nrow=3, ncol=4):
     ## Set the initial rewards
+    global rewards
     rewards = np.zeros(shape=(nrow, ncol))
     ## Coordinates of the 'wall'
     wall_row = int(nrow / 2)
@@ -57,11 +58,11 @@ def build_environment(nrow=3, ncol=4):
     
     return rewards, values, states, transition
     
-def act(action_values, action, states, state, rewards):
+def act(values, action, states, state, rewards):
     '''
     Moves the agent through the states based on action taken.
     '''
-    action_value = action_values[action]
+    action_value = values[action]
     new_state = state
     goal_row = 0
     goal_col = max(states)[1]
@@ -82,12 +83,12 @@ def act(action_values, action, states, state, rewards):
     
     return new_state
 
-def bellman_update(action, transition, state, rewards, values, gamma=1):
+def bellman_update(action, transition, states, state, rewards, values, gamma=1):
     trans_prob = transition[action]
     q = [0] * len(trans_prob)
     for i in range(len(trans_prob)):
-        next_state = act(action_values, action, states, state, rewards)
-        q[i] = trans_prob[i] * (rewards[state[0], state[1]] + gamma * values[])
+        next_state = act(values, action, states, state, rewards)
+#         q[i] = trans_prob[i] * (rewards[state[0], state[1]] + gamma * values[])
     return sum(q)
 
 if __name__ == '__main__':
