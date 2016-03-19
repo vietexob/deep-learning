@@ -35,14 +35,17 @@ def build_environment(nrow=3, ncol=4):
     rewards[1, ncol-1] = -1 # the trap
     
     ## Set the initial values
+    global values 
     values = rewards
     ## The set of states are the grid cells
+    global states 
     states = product(range(nrow), range(ncol))
     states = list(states) # convert iterator to list
 #     print rewards[max(states)]
 #     for state in states:
 #         print state
     ## Create the transition probabilities
+    global transition 
     transition = {}
     transition['N'] = [0.8, 0, 0.1, 0.1] # north, south, east, west
     transition['S'] = [0, 0.8, 0.1, 0.1]
@@ -55,10 +58,9 @@ def build_environment(nrow=3, ncol=4):
     action_values['S'] = [1, 0]
     action_values['E'] = [0, 1]
     action_values['W'] = [0, -1]
+#     return rewards, values, states, transition
     
-    return rewards, values, states, transition
-    
-def act(values, action, states, state, rewards):
+def act(values, action, state):
     '''
     Moves the agent through the states based on action taken.
     '''
@@ -83,12 +85,12 @@ def act(values, action, states, state, rewards):
     
     return new_state
 
-def bellman_update(action, transition, states, state, rewards, values, gamma=1):
+def bellman_update(action, state, gamma=1):
     trans_prob = transition[action]
     q = [0] * len(trans_prob)
     for i in range(len(trans_prob)):
         next_state = act(values, action, states, state, rewards)
-#         q[i] = trans_prob[i] * (rewards[state[0], state[1]] + gamma * values[])
+        q[i] = trans_prob[i] * (rewards[state[0], state[1]] + gamma * values[next_state[0], next_state[1]])
     return sum(q)
 
 if __name__ == '__main__':
