@@ -23,8 +23,8 @@ transition <- list("N" = c("N" = 0.8, "S" = 0, "E" = 0.1, "W" = 0.1),
 # The value of an action (e.g., move north means y + 1)
 action.values <- list("N" = c("x" = 0, "y" = 1), 
                       "S" = c("x" = 0, "y" = -1),
-                      "E" = c("x" = -1, "y" = 0),
-                      "W" = c("x" = 1, "y" = 0))
+                      "E" = c("x" = 1, "y" = 0),
+                      "W" = c("x" = -1, "y" = 0))
 
 # Function serves to move the agent through states based on an action
 act <- function(action, state) {
@@ -67,16 +67,25 @@ value.iteration <- function(states, actions, rewards, values, gamma, n.iter) {
     for(j in 1:nrow(states)) {
       state <- unlist(states[j, ])
       if(j %in% c(4, 8)) {
-        next # terminate states
+        next # terminal states
       }
       q.values <- as.numeric(lapply(actions, bellman.update, state=state,
                                     values=values, gamma=gamma))
-      values[state["y"], state["x"]] <- max(q.values)
+      print(state-1)
+      print(q.values)
+      max_q <- max(q.values)
+      if(!is.na(max_q)) {
+        values[state["y"], state["x"]] <- max_q
+      }
+      # print(values)
     }
+    print(values)
+    print('------------------------------------')
   }
   
   return(values)
 }
 
 final.values <- value.iteration(states=states, actions=actions,
-                                rewards=rewards, values=values, gamma=0.99, n.iter=100)
+                                rewards=rewards, values=values, gamma=1, n.iter=100)
+print(final.values)
