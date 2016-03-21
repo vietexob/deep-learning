@@ -7,6 +7,7 @@ Created on Mar 13, 2016
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentDefaultsHelpFormatter
 from textwrap import dedent
 from itertools import *
+from progressbar import ProgressBar
 import numpy as np
 import math
 
@@ -21,9 +22,10 @@ def parse():
                             epilog=dedent('To be filled.'))
     parser.add_argument('-r', '--nrow', type=int, default=3, help='Number of rows')
     parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns')
+    parser.add_argument('-g', '--goal', type=int, default=1, help='Goal reward')
     return vars(parser.parse_args())
     
-def build_environment(nrow=3, ncol=4):
+def build_environment(nrow=3, ncol=4, goal_reward=1):
     '''
     Sets up the MDP environment.
     '''
@@ -41,14 +43,14 @@ def build_environment(nrow=3, ncol=4):
     goal_col = max(states)[1]
     global goal_state
     goal_state = (goal_row, goal_col)
-    rewards[goal_state] = 1
+    rewards[goal_state] = goal_reward
     
     ## The trap state
     trap_row = 1
     trap_col = max(states)[1]
     global trap_state
     trap_state = (trap_row, trap_col)
-    rewards[trap_state] = -1
+    rewards[trap_state] = -goal_reward
     
     ## Coordinates of the 'wall'
     wall_row = int(nrow / 2)
@@ -62,8 +64,8 @@ def build_environment(nrow=3, ncol=4):
     global values 
     values = np.zeros(shape=(nrow, ncol))
     values[wall_state] = None
-    values[goal_state] = 1
-    values[trap_state] = -1
+    values[goal_state] = goal_reward
+    values[trap_state] = -goal_reward
     
     ## The set of actions
     global actions
@@ -115,7 +117,6 @@ def bellman_update(state, action, gamma=1):
     ## state: the current state
     ## gamma: discount factor
     trans_prob = transition[action]
-#     print trans_prob
     q = [0] * len(trans_prob) # the Q-function
     for i in range(len(trans_prob)):
         if trans_prob[i] > 0:
@@ -124,29 +125,47 @@ def bellman_update(state, action, gamma=1):
             q[i] = trans_prob[i] * (rewards[state] + gamma * values[next_state])
     return sum(q)
 
-def value_iteration(gamma=1, n_iter=1000):
+def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
+    ## Values of the previous iteration
+    prev_values = np.zeros(shape=(nrow, ncol))
+    prev_values[goal_state] = goal_reward
+    prev_values[trap_state] = -goal_reward
+    prev_values[wall_state] = None
+    ## The threshold of different
+    epsilon = 1e-5
+    ## Define a progress bar
+    progress = ProgressBar(maxval=n_iter).start()
+    
     for i in range(n_iter):
         for state in states:
             if state != goal_state and state != trap_state:
                 q_values = [0] * len(actions)
                 counter = 0
-                print state
+#                 print state
                 for action in actions:
                     q_values[counter] = bellman_update(state, action, gamma)
                     counter += 1
-                print q_values
+#                 print q_values
                 max_q = max(q_values)
                 if not math.isnan(max_q):
                     values[state] = max_q
-        print values
-        print('----------------------------')
+        diff = values - prev_values
+        max_diff = np.nanmax(abs(diff))
+        if max_diff < epsilon:
+            progress.finish()
+            break
+        prev_values[:] = values # make a shallow copy of the list so that it won't get updated
+        progress.update(i+1)
+
 if __name__ == '__main__':
     params = parse()
     nrow = params['nrow']
     ncol = params['ncol']
-    build_environment(nrow, ncol)
-    print rewards
-    print values
-    print transition
-    value_iteration(gamma=1, n_iter=100)
+    goal_reward = params['goal']
+    
+    build_environment(nrow=nrow, ncol=ncol, goal_reward=goal_reward)
+#     print rewards
+#     print values
+#     print transition
+    value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
     print values

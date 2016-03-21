@@ -71,16 +71,14 @@ value.iteration <- function(states, actions, rewards, values, gamma, n.iter) {
       }
       q.values <- as.numeric(lapply(actions, bellman.update, state=state,
                                     values=values, gamma=gamma))
-      print(state-1)
-      print(q.values)
+      # print(state-1)
+      # print(q.values)
       max_q <- max(q.values)
       if(!is.na(max_q)) {
         values[state["y"], state["x"]] <- max_q
       }
-      # print(values)
     }
-    print(values)
-    print('------------------------------------')
+    # print(values)
   }
   
   return(values)
