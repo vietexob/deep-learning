@@ -23,6 +23,9 @@ def parse():
     return vars(parser.parse_args())
     
 def build_environment(nrow=3, ncol=4):
+    '''
+    Sets up the MDP environment.
+    '''
     ## Set the initial rewards
     global rewards
     rewards = np.zeros(shape=(nrow, ncol))
@@ -41,9 +44,7 @@ def build_environment(nrow=3, ncol=4):
     global states 
     states = product(range(nrow), range(ncol))
     states = list(states) # convert iterator to list
-#     print rewards[max(states)]
-#     for state in states:
-#         print state
+    
     ## Create the transition probabilities
     global transition 
     transition = {}
@@ -52,19 +53,19 @@ def build_environment(nrow=3, ncol=4):
     transition['E'] = [0.1, 0.1, 0.8, 0]
     transition['W'] = [0.1, 0.1, 0, 0.8]
     
-    ## The value of an action
+    ## The value of an action on the grid
+    global action_values 
     action_values = {}
     action_values['N'] = [-1, 0] # x, y
     action_values['S'] = [1, 0]
     action_values['E'] = [0, 1]
     action_values['W'] = [0, -1]
-#     return rewards, values, states, transition
-    
-def act(values, action, state):
+        
+def act(action, state):
     '''
     Moves the agent through the states based on action taken.
     '''
-    action_value = values[action]
+    action_value = action_values[action]
     new_state = state
     goal_row = 0
     goal_col = max(states)[1]
@@ -98,4 +99,9 @@ if __name__ == '__main__':
     nrow = params['nrow']
     ncol = params['ncol']
     build_environment(nrow, ncol)
+    print rewards
+    print values
+    print states
+    print transition
+    print action_values
     
