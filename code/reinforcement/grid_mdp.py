@@ -9,6 +9,7 @@ from textwrap import dedent
 from itertools import *
 from progressbar import ProgressBar
 import numpy as np
+import random
 import math
 
 def parse():
@@ -165,25 +166,54 @@ def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
         progress.update(i+1)
     return policy
 
-def get_transition_matrix(action):
+def get_transition_matrix(policy):
     '''
-    Computes an (|S|x|S|) transition matrix given a fixed action.
+    Computes an (|S|x|S|) transition matrix for the give policy.
     '''
     transition_matrix = np.zeros(shape=(len(states), len(states)))
     for state in states:
         ## The probabilities of transition to the next states given the current state and action
-        from_state_idx = states.index(state)
-        trans_prob = transition[action]
-        for i in range(len(trans_prob)):
-#             print trans_prob[i]
-            if trans_prob[i] > 0:
-                prob_action = actions[i]
-#                 print (state, prob_action)
-                next_state = act(state, prob_action)
-                to_state_idx = states.index(next_state)
-                transition_matrix[from_state_idx, to_state_idx] = trans_prob[i]
-                
+        if state != goal_state and state != trap_state and state != wall_state:
+            from_state_idx = states.index(state)
+            action = policy[state]
+            trans_prob = transition[action]
+            for i in range(len(trans_prob)):
+                if trans_prob[i] > 0:
+                    prob_action = actions[i]
+                    next_state = act(state, prob_action)
+                    to_state_idx = states.index(next_state)
+                    transition_matrix[from_state_idx, to_state_idx] = trans_prob[i]
+    
     return transition_matrix
+
+def policy_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
+    '''
+    Implements the policy iteration algorithm.
+    '''
+    ## Initialize a random policy
+    policy = np.chararray(shape=(nrow, ncol))
+    policy[goal_state] = '_'
+    policy[trap_state] = '_'
+    policy[wall_state] = '_'
+    for state in states:
+        if state != goal_state and state != trap_state and state != wall_state:
+            rand_action = random.choice(actions)
+            policy[state] = rand_action
+    
+    ## Compute the value of the current policy
+    ## Solve the linear equations
+    b = np.zeros(shape=(1, len(states))) # the RHS - rewards
+    for state in states:
+        state_idx = states.index(state)
+        if state != wall_state:
+            b[0, state_idx] = rewards[state]
+    b = b.transpose()
+    transition_matrix = get_transition_matrix(policy)
+    ## The matrix of coefficients
+    a = np.identity(len(states)) - gamma * transition_matrix
+    value = np.linalg.solve(a, b)
+    print value
+    return policy
 
 if __name__ == '__main__':
     params = parse()
@@ -195,10 +225,8 @@ if __name__ == '__main__':
 #     print rewards
 #     print values
 #     print transition
-    transition_matrix = get_transition_matrix(actions[0])
-    print transition_matrix
     
-    policy = value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
-    print values
+#     policy = value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
+    policy = policy_iteration(nrow, ncol, gamma=1, n_iter=100)
     print policy
     
