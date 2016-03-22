@@ -135,6 +135,11 @@ def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
     epsilon = 1e-5
     ## Define a progress bar
     progress = ProgressBar(maxval=n_iter).start()
+    ## Create a policy matrix
+    policy = np.chararray(shape=(nrow, ncol))
+    policy[goal_state] = '_'
+    policy[trap_state] = '_'
+    policy[wall_state] = '_'
     
     for i in range(n_iter):
         for state in states:
@@ -147,8 +152,10 @@ def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
                     counter += 1
 #                 print q_values
                 max_q = max(q_values)
+                max_idx = q_values.index(max_q)
                 if not math.isnan(max_q):
                     values[state] = max_q
+                    policy[state] = actions[max_idx]
         diff = values - prev_values
         max_diff = np.nanmax(abs(diff))
         if max_diff < epsilon:
@@ -156,6 +163,27 @@ def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
             break
         prev_values[:] = values # make a shallow copy of the list so that it won't get updated
         progress.update(i+1)
+    return policy
+
+def get_transition_matrix(action):
+    '''
+    Computes an (|S|x|S|) transition matrix given a fixed action.
+    '''
+    transition_matrix = np.zeros(shape=(len(states), len(states)))
+    for state in states:
+        ## The probabilities of transition to the next states given the current state and action
+        from_state_idx = states.index(state)
+        trans_prob = transition[action]
+        for i in range(len(trans_prob)):
+#             print trans_prob[i]
+            if trans_prob[i] > 0:
+                prob_action = actions[i]
+#                 print (state, prob_action)
+                next_state = act(state, prob_action)
+                to_state_idx = states.index(next_state)
+                transition_matrix[from_state_idx, to_state_idx] = trans_prob[i]
+                
+    return transition_matrix
 
 if __name__ == '__main__':
     params = parse()
@@ -167,5 +195,10 @@ if __name__ == '__main__':
 #     print rewards
 #     print values
 #     print transition
-    value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
+    transition_matrix = get_transition_matrix(actions[0])
+    print transition_matrix
+    
+    policy = value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
     print values
+    print policy
+    
