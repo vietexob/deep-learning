@@ -26,7 +26,7 @@ def parse():
     parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns')
     parser.add_argument('-g', '--goal', type=int, default=1, help='Goal reward')
     parser.add_argument('-p', '--penalty', type=int, default=-1, help='Penalty')
-    parser.add_argument('-d', '--discount', type=float, default=1, help='Discount')
+    parser.add_argument('-d', '--discount', type=float, default=0.95, help='Discount')
     
     return vars(parser.parse_args())
     
@@ -152,17 +152,19 @@ def value_iteration(nrow=3, ncol=4, goal_reward=1, penalty=-1,
     
     for i in range(n_iter):
         for state in states:
-            if state != goal_state and state != trap_state:
+            if state != goal_state and state != trap_state and state != wall_state:
                 q_values = [0] * len(actions)
                 counter = 0
                 for action in actions:
                     q_values[counter] = bellman_update(state, action, gamma)
                     counter += 1
                 max_q = max(q_values)
+                if math.isnan(max_q):
+                    sys.exit('max_q is nan!')
                 max_idx = q_values.index(max_q)
-                if not math.isnan(max_q):
-                    values[state] = max_q
-                    policy[state] = actions[max_idx]
+                values[state] = max_q
+                policy[state] = actions[max_idx]
+                
         diff = values - prev_values
         max_diff = np.nanmax(abs(diff))
         if max_diff < epsilon:
@@ -201,10 +203,7 @@ def get_transition_matrix(policy):
     
     return transition_matrix
 
-def bellman_equation(state, action, gamma=1):
-    return 0
-
-def policy_iteration(nrow=3, ncol=4, gamma=1):
+def policy_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
     '''
     Implements the policy iteration algorithm.
     '''
@@ -217,15 +216,16 @@ def policy_iteration(nrow=3, ncol=4, gamma=1):
         if state != goal_state and state != trap_state and state != wall_state:
             rand_action = random.choice(actions)
             policy[state] = rand_action
-    print policy
+#     print policy
     
+    ## Define a progress bar
+    progress = ProgressBar(maxval=n_iter).start()
     ## Run the policy iteration loop
-    is_changed = True
-    counter = 0
-    while is_changed:
+    for i in range(n_iter):
         ## Compute the value of the current policy
         ## Solve the linear equations
         transition_matrix = get_transition_matrix(policy)
+#         print transition_matrix
         b = np.zeros(shape=(1, len(states))) # the RHS - rewards
         for state in states:
             state_idx = states.index(state)
@@ -243,24 +243,24 @@ def policy_iteration(nrow=3, ncol=4, gamma=1):
             if state != wall_state:
                 state_idx = states.index(state)
                 values[state] = value[state_idx]
-        print values
+#         print values
         
         is_changed = False
-        counter += 1
-        print counter
         for state in states:
             if state != goal_state and state != trap_state and state != wall_state:
                 q_best = values[state]
                 for action in actions:
                     q_sa = bellman_update(state, action, gamma)
-                    if q_sa > q_best:
+                    if q_sa > q_best and action != policy[state]:
                         policy[state] = action
                         q_best = q_sa
                         is_changed = True
-#                         break
-#             if is_changed:
-#                 break
-        print policy
+        if not is_changed:
+            progress.finish()
+            break
+        else:
+#             print policy
+            progress.update(i+1)
     return policy
 
 if __name__ == '__main__':
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     
 #     policy = value_iteration(nrow, ncol, goal_reward=goal_reward, penalty=penalty,
 #                              gamma=gamma, n_iter=1000)
-    policy = policy_iteration(nrow, ncol, gamma=gamma)
+    policy = policy_iteration(nrow, ncol, gamma=gamma, n_iter=1000)
     print policy
     print values
     
