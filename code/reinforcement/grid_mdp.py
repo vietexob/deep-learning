@@ -24,9 +24,12 @@ def parse():
     parser.add_argument('-r', '--nrow', type=int, default=3, help='Number of rows')
     parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns')
     parser.add_argument('-g', '--goal', type=int, default=1, help='Goal reward')
+    parser.add_argument('-p', '--penalty', type=int, default=-1, help='Penalty')
+    parser.add_argument('-d', '--discount', type=float, default=1, help='Discount')
+    
     return vars(parser.parse_args())
     
-def build_environment(nrow=3, ncol=4, goal_reward=1):
+def build_environment(nrow=3, ncol=4, goal_reward=1, penalty=-1):
     '''
     Sets up the MDP environment.
     '''
@@ -51,7 +54,7 @@ def build_environment(nrow=3, ncol=4, goal_reward=1):
     trap_col = max(states)[1]
     global trap_state
     trap_state = (trap_row, trap_col)
-    rewards[trap_state] = -goal_reward
+    rewards[trap_state] = penalty
     
     ## Coordinates of the 'wall'
     wall_row = int(nrow / 2)
@@ -66,7 +69,7 @@ def build_environment(nrow=3, ncol=4, goal_reward=1):
     values = np.zeros(shape=(nrow, ncol))
     values[wall_state] = None
     values[goal_state] = goal_reward
-    values[trap_state] = -goal_reward
+    values[trap_state] = penalty
     
     ## The set of actions
     global actions
@@ -97,7 +100,7 @@ def act(cur_state, action):
     next_state = cur_state
     next_state = list(next_state) # convert from tuple to list
     
-    ## Check if either state has been reached
+    ## Check if either goal or trap state has been reached
     if (cur_state == goal_state) or (cur_state == trap_state):
         ## Reached the goal or the trap - no change in state
         return cur_state
@@ -126,11 +129,12 @@ def bellman_update(state, action, gamma=1):
             q[i] = trans_prob[i] * (rewards[state] + gamma * values[next_state])
     return sum(q)
 
-def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
+def value_iteration(nrow=3, ncol=4, goal_reward=1, penalty=-1,
+                    gamma=1, n_iter=1000):
     ## Values of the previous iteration
     prev_values = np.zeros(shape=(nrow, ncol))
     prev_values[goal_state] = goal_reward
-    prev_values[trap_state] = -goal_reward
+    prev_values[trap_state] = penalty
     prev_values[wall_state] = None
     ## The threshold of different
     epsilon = 1e-5
@@ -147,11 +151,9 @@ def value_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
             if state != goal_state and state != trap_state:
                 q_values = [0] * len(actions)
                 counter = 0
-#                 print state
                 for action in actions:
                     q_values[counter] = bellman_update(state, action, gamma)
                     counter += 1
-#                 print q_values
                 max_q = max(q_values)
                 max_idx = q_values.index(max_q)
                 if not math.isnan(max_q):
@@ -181,12 +183,15 @@ def get_transition_matrix(policy):
                 if trans_prob[i] > 0:
                     prob_action = actions[i]
                     next_state = act(state, prob_action)
-                    to_state_idx = states.index(next_state)
-                    transition_matrix[from_state_idx, to_state_idx] = trans_prob[i]
+                    next_state_idx = states.index(next_state)
+                    transition_matrix[from_state_idx, next_state_idx] = trans_prob[i]
     
     return transition_matrix
 
-def policy_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
+def bellman_equation(state, action, gamma=1):
+    return 0
+
+def policy_iteration(nrow=3, ncol=4, gamma=1):
     '''
     Implements the policy iteration algorithm.
     '''
@@ -199,20 +204,49 @@ def policy_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
         if state != goal_state and state != trap_state and state != wall_state:
             rand_action = random.choice(actions)
             policy[state] = rand_action
+    print policy
     
-    ## Compute the value of the current policy
-    ## Solve the linear equations
-    b = np.zeros(shape=(1, len(states))) # the RHS - rewards
-    for state in states:
-        state_idx = states.index(state)
-        if state != wall_state:
-            b[0, state_idx] = rewards[state]
-    b = b.transpose()
-    transition_matrix = get_transition_matrix(policy)
-    ## The matrix of coefficients
-    a = np.identity(len(states)) - gamma * transition_matrix
-    value = np.linalg.solve(a, b)
-    print value
+    ## Run the policy iteration loop
+    is_changed = True
+    counter = 0
+    while is_changed:
+        ## Compute the value of the current policy
+        ## Solve the linear equations
+        transition_matrix = get_transition_matrix(policy)
+        b = np.zeros(shape=(1, len(states))) # the RHS - rewards
+        for state in states:
+            state_idx = states.index(state)
+            if state != wall_state:
+                b[0, state_idx] = rewards[state]
+#         b = np.dot(b, transition_matrix)
+        b = b.transpose()
+        
+        ## The matrix of coefficients
+        a = np.identity(len(states)) - gamma * transition_matrix
+        value = np.linalg.solve(a, b)
+        ## Update the global value function
+        for state in states:
+            if state != goal_state and state != trap_state and state != wall_state:
+                state_idx = states.index(state)
+                values[state] = value[state_idx]
+        print values
+        
+        is_changed = False
+        counter += 1
+        print counter
+        for state in states:
+            if state != goal_state and state != trap_state and state != wall_state:
+                q_best = values[state]
+                for action in actions:
+                    q_sa = bellman_update(state, action, gamma)
+                    if q_sa > q_best:
+                        policy[state] = action
+                        q_best = q_sa
+                        is_changed = True
+#                         break
+#             if is_changed:
+#                 break
+        print policy
     return policy
 
 if __name__ == '__main__':
@@ -220,13 +254,17 @@ if __name__ == '__main__':
     nrow = params['nrow']
     ncol = params['ncol']
     goal_reward = params['goal']
+    penalty = params['penalty']
+    gamma = params['discount']
     
-    build_environment(nrow=nrow, ncol=ncol, goal_reward=goal_reward)
+    build_environment(nrow=nrow, ncol=ncol, goal_reward=goal_reward, penalty=penalty)
 #     print rewards
 #     print values
 #     print transition
     
-#     policy = value_iteration(nrow, ncol, gamma=0.98, n_iter=500)
-    policy = policy_iteration(nrow, ncol, gamma=1, n_iter=100)
+#     policy = value_iteration(nrow, ncol, goal_reward=goal_reward, penalty=penalty,
+#                              gamma=gamma, n_iter=1000)
+    policy = policy_iteration(nrow, ncol, gamma=gamma)
     print policy
+    print values
     
