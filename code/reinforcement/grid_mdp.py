@@ -11,6 +11,7 @@ from progressbar import ProgressBar
 import numpy as np
 import random
 import math
+import sys
 
 def parse():
     '''
@@ -96,6 +97,9 @@ def act(cur_state, action):
     '''
     Moves the agent through the states based on action taken.
     '''
+    if cur_state == wall_state:
+        sys.exit('Cannot enter wall state!')
+    
     action_value = action_values[action]
     next_state = cur_state
     next_state = list(next_state) # convert from tuple to list
@@ -175,16 +179,25 @@ def get_transition_matrix(policy):
     transition_matrix = np.zeros(shape=(len(states), len(states)))
     for state in states:
         ## The probabilities of transition to the next states given the current state and action
-        if state != goal_state and state != trap_state and state != wall_state:
+        if state != wall_state:
             from_state_idx = states.index(state)
-            action = policy[state]
-            trans_prob = transition[action]
-            for i in range(len(trans_prob)):
-                if trans_prob[i] > 0:
-                    prob_action = actions[i]
-                    next_state = act(state, prob_action)
-                    next_state_idx = states.index(next_state)
-                    transition_matrix[from_state_idx, next_state_idx] = trans_prob[i]
+            if state == goal_state or state == trap_state:
+                ## Always stay in the same state no matter what action
+                next_state_idx = from_state_idx
+                transition_matrix[from_state_idx, next_state_idx] = 1
+            else:
+                action = policy[state]
+                trans_prob = transition[action]
+                for i in range(len(trans_prob)):
+                    if trans_prob[i] > 0:
+                        prob_action = actions[i]
+                        next_state = act(state, prob_action)
+                        next_state_idx = states.index(next_state)
+                        if next_state == state: # stay the same
+                            prev_value = transition_matrix[from_state_idx, next_state_idx]
+                            transition_matrix[from_state_idx, next_state_idx] = prev_value + trans_prob[i]
+                        else:
+                            transition_matrix[from_state_idx, next_state_idx] = trans_prob[i]
     
     return transition_matrix
 
@@ -218,15 +231,16 @@ def policy_iteration(nrow=3, ncol=4, gamma=1):
             state_idx = states.index(state)
             if state != wall_state:
                 b[0, state_idx] = rewards[state]
-#         b = np.dot(b, transition_matrix)
+        b = np.dot(b, transition_matrix)
         b = b.transpose()
         
         ## The matrix of coefficients
         a = np.identity(len(states)) - gamma * transition_matrix
+        ## Solve for the values
         value = np.linalg.solve(a, b)
         ## Update the global value function
         for state in states:
-            if state != goal_state and state != trap_state and state != wall_state:
+            if state != wall_state:
                 state_idx = states.index(state)
                 values[state] = value[state_idx]
         print values
