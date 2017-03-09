@@ -47,8 +47,8 @@ print 'Test set', test_dataset.shape, test_labels.shape
 ## With gradient descent training, even this much data is prohibitive.
 ## Subset the training data for faster turnaround
 train_subset = 10000
-
 graph = tf.Graph()
+
 with graph.as_default():
     ## Input data
     ## Load the training, validation and test data into constants that are attached to the graph
@@ -84,8 +84,7 @@ with graph.as_default():
 num_steps = 801
 
 def accuracy(pred, labels):
-    return(100.0 * np.sum(np.argmax(pred, 1) == np.argmax(labels, 1))
-           / pred.shape[0])
+    return(100.0 * np.sum(np.argmax(pred, 1) == np.argmax(labels, 1)) / pred.shape[0])
 
 # with tf.Session(graph=graph) as session:
 #     ## This is a one-time operation that ensures the params get initialized as described in the graph:
@@ -106,8 +105,13 @@ def accuracy(pred, labels):
 
 ## NOW: Switch to SGD instead, which is much faster 
 batch_size = 128
-
+hidden_layer_size = 1024
+has_hidden_layer = True
+## NOTE:
+## Without hidden layer: Test accuracy: 85.5%
+## With hidden layer: Test accuracy: 88.8%
 graph = tf.Graph()
+
 with graph.as_default():
     ## Input data. For the training data, use a placeholder that will be fed at runtime with
     ## a training mini-batch
@@ -116,44 +120,46 @@ with graph.as_default():
     tf_valid_dataset = tf.constant(valid_dataset)
     tf_test_dataset = tf.constant(test_dataset)
     
-#     ## Variables
-#     weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
-#     biases = tf.Variable(tf.zeros([num_labels]))
-#     
-#     ## Training computation
-#     logits = tf.matmul(tf_train_dataset, weights) + biases
-#     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
-    
-    ## Now: Change to one-layer NN
-    ## Variables
-    hidden_layer_size = 1024
-    weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
-    biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
-    hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
-    
-    ## Output layer
-    weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
-    biases_o = tf.Variable(tf.zeros([num_labels]))
-    logits = tf.matmul(hidden, weights_o) + biases_o
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
-    ## END CHANGE
-    
+    if has_hidden_layer:
+        ## Now: Change to one-layer NN
+        ## Variables
+        weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
+        biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
+        hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
+        
+        ## Output layer
+        weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
+        biases_o = tf.Variable(tf.zeros([num_labels]))
+        logits = tf.matmul(hidden, weights_o) + biases_o
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+        ## END CHANGE
+    else:
+        ## Variables
+        weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
+        biases = tf.Variable(tf.zeros([num_labels]))
+         
+        ## Training computation
+        logits = tf.matmul(tf_train_dataset, weights) + biases
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+        
     ## Optimizer
     optimizer = tf.train.GradientDescentOptimizer(0.50).minimize(loss)
     
     ## Prediction for training, validation and test data
     train_pred = tf.nn.softmax(logits)
-#     valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
-#     test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
     
-    valid_hidden = tf.nn.relu(tf.matmul(tf_valid_dataset, weights_h) + biases_h)
-    valid_logits = tf.matmul(valid_hidden, weights_o) + biases_o
-    valid_pred = tf.nn.softmax(valid_logits)
-    
-    test_hidden = tf.nn.relu(tf.matmul(tf_test_dataset, weights_h) + biases_h)
-    test_logits = tf.matmul(test_hidden, weights_o) + biases_o
-    test_pred = tf.nn.softmax(test_logits)
-
+    if has_hidden_layer:
+        valid_hidden = tf.nn.relu(tf.matmul(tf_valid_dataset, weights_h) + biases_h)
+        valid_logits = tf.matmul(valid_hidden, weights_o) + biases_o
+        valid_pred = tf.nn.softmax(valid_logits)
+        
+        test_hidden = tf.nn.relu(tf.matmul(tf_test_dataset, weights_h) + biases_h)
+        test_logits = tf.matmul(test_hidden, weights_o) + biases_o
+        test_pred = tf.nn.softmax(test_logits)
+    else:
+        valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
+        test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
+        
 ## Let's run it
 num_steps = 3001
 

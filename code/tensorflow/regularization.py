@@ -44,12 +44,20 @@ print 'Validation set', valid_dataset.shape, valid_labels.shape
 print 'Test set', test_dataset.shape, test_labels.shape
 
 def accuracy(pred, labels):
-    return(100.0 * np.sum(np.argmax(pred, 1) == np.argmax(labels, 1))
-           / pred.shape[0])
+    return(100.0 * np.sum(np.argmax(pred, 1) == np.argmax(labels, 1)) / pred.shape[0])
 
 ## Introduce and tune L2 regularization for both logistic and NN models.
 batch_size = 128
+hidden_layer_size = 1024
+has_regularization = True
+has_dropout = True
+## NOTE:
+## Has none: Test accuracy: 89.1%
+## Has regularization and no dropout: Test accuracy: 81.5%
+## Has dropout and no regularization: Test accuracy: 87.1% 
+## Has both: 
 graph = tf.Graph()
+
 with graph.as_default():
     ## Input data. For the training data, use a placeholder that will be fed at runtime with
     ## a training mini-batch
@@ -64,26 +72,30 @@ with graph.as_default():
 #      
 #     ## Training computation
 #     logits = tf.matmul(tf_train_dataset, weights) + biases
-#     ## Add regularizer
-#     logits = logits + tf.nn.l2_loss(weights)
 #     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+#     ## Add regularizer
+#     loss += tf.nn.l2_loss(weights)
     
     ## Now: Change to one-layer NN
     ## Variables
-    hidden_layer_size = 1024
     weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
     biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
     hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
-     
+    
     ## Output layer
     weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
     biases_o = tf.Variable(tf.zeros([num_labels]))
-    ## Add dropout
-    hidden_dropout = tf.nn.dropout(hidden, keep_prob=0.50)
-    logits = tf.matmul(hidden_dropout, weights_o) + biases_o
-    ## Add regularization
-    logits = logits + tf.nn.l2_loss(weights_o)
+    if has_dropout:
+        ## Add dropout
+        hidden_dropout = tf.nn.dropout(hidden, keep_prob=0.50)
+        logits = tf.matmul(hidden_dropout, weights_o) + biases_o
+    else:
+        logits = tf.matmul(hidden, weights_o) + biases_o
+    
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+    if has_regularization:
+        ## Add regularization
+        loss += tf.nn.l2_loss(weights_h) + tf.nn.l2_loss(weights_o)
     ## END CHANGE
     
     ## Optimizer
