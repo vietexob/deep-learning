@@ -92,7 +92,8 @@ with graph.as_default():
     else:
         logits = tf.matmul(hidden, weights_o) + biases_o
     
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                  labels=tf_train_labels))
     if has_regularization:
         ## Add regularization
         loss += tf.nn.l2_loss(weights_h) + tf.nn.l2_loss(weights_o)

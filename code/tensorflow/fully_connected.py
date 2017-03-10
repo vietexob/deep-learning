@@ -68,7 +68,8 @@ with graph.as_default():
     ## Compute the softmax and cross-entropy (it's one operation in TensorFlow because it's very common
     ## and can be optimized. Take average of this cross-entropy across all training examples: that's the loss.
     logits = tf.matmul(tf_train_dataset, weights) + biases
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels)) 
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                  labels=tf_train_labels)) 
     
     ## Optimizer
     ## Find the minimum of this loss using gradient descent
@@ -131,7 +132,8 @@ with graph.as_default():
         weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
         biases_o = tf.Variable(tf.zeros([num_labels]))
         logits = tf.matmul(hidden, weights_o) + biases_o
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                      labels=tf_train_labels))
         ## END CHANGE
     else:
         ## Variables
@@ -140,7 +142,8 @@ with graph.as_default():
          
         ## Training computation
         logits = tf.matmul(tf_train_dataset, weights) + biases
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                      labels=tf_train_labels))
         
     ## Optimizer
     optimizer = tf.train.GradientDescentOptimizer(0.50).minimize(loss)
