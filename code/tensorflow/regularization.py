@@ -53,8 +53,8 @@ has_regularization = True
 has_dropout = True
 ## NOTE:
 ## Has none: Test accuracy: 89.1%
-## Has regularization and no dropout: Test accuracy: 81.5%
-## Has dropout and no regularization: Test accuracy: 87.1% 
+## Has regularization and no dropout:
+## Has dropout and no regularization:
 ## Has both: 
 graph = tf.Graph()
 
