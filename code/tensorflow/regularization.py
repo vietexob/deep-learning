@@ -50,12 +50,13 @@ def accuracy(pred, labels):
 batch_size = 128
 hidden_layer_size = 1024
 has_regularization = True
-has_dropout = True
-## NOTE:
+has_dropout = False
+has_hidden_layer = True
+## NOTE: With hidden layer
 ## Has none: Test accuracy: 89.1%
-## Has regularization and no dropout:
-## Has dropout and no regularization:
-## Has both: 
+## Has regularization and no dropout: Test accuracy: 89.4%
+## Has dropout and no regularization: Test accuracy: 87.6%
+## Has both: Test accuracy: 87.0%
 graph = tf.Graph()
 
 with graph.as_default():
@@ -66,55 +67,62 @@ with graph.as_default():
     tf_valid_dataset = tf.constant(valid_dataset)
     tf_test_dataset = tf.constant(test_dataset)
     
-#     ## Variables
-#     weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
-#     biases = tf.Variable(tf.zeros([num_labels]))
-#      
-#     ## Training computation
-#     logits = tf.matmul(tf_train_dataset, weights) + biases
-#     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
-#     ## Add regularizer
-#     loss += tf.nn.l2_loss(weights)
-    
-    ## Now: Change to one-layer NN
-    ## Variables
-    weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
-    biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
-    hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
-    
-    ## Output layer
-    weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
-    biases_o = tf.Variable(tf.zeros([num_labels]))
-    if has_dropout:
-        ## Add dropout
-        hidden_dropout = tf.nn.dropout(hidden, keep_prob=0.50)
-        logits = tf.matmul(hidden_dropout, weights_o) + biases_o
+    if has_hidden_layer:
+        ## Now: Change to one-layer NN
+        ## Variables
+        weights_h = tf.Variable(tf.truncated_normal([image_size*image_size, hidden_layer_size]))
+        biases_h = tf.Variable(tf.zeros([hidden_layer_size]))
+        hidden = tf.nn.relu(tf.matmul(tf_train_dataset, weights_h) + biases_h)
+        
+        ## Output layer
+        weights_o = tf.Variable(tf.truncated_normal([hidden_layer_size, num_labels]))
+        biases_o = tf.Variable(tf.zeros([num_labels]))
+        if has_dropout:
+            ## Add dropout
+            hidden_dropout = tf.nn.dropout(hidden, keep_prob=0.50)
+            logits = tf.matmul(hidden_dropout, weights_o) + biases_o
+        else:
+            logits = tf.matmul(hidden, weights_o) + biases_o
+        if has_regularization:
+            logits += tf.nn.l2_loss(weights_o)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                      labels=tf_train_labels))
+        ## END CHANGE
     else:
-        logits = tf.matmul(hidden, weights_o) + biases_o
-    
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
-                                                                  labels=tf_train_labels))
-    if has_regularization:
-        ## Add regularization
-        loss += tf.nn.l2_loss(weights_h) + tf.nn.l2_loss(weights_o)
-    ## END CHANGE
+        ## Variables
+        weights = tf.Variable(tf.truncated_normal([image_size*image_size, num_labels]))
+        biases = tf.Variable(tf.zeros([num_labels]))
+          
+        ## Training computation
+        logits = tf.matmul(tf_train_dataset, weights) + biases
+        if has_regularization:
+            logits += tf.nn.l2_loss(weights)
+        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
+                                                                      labels=tf_train_labels))
     
     ## Optimizer
-    optimizer = tf.train.GradientDescentOptimizer(0.50).minimize(loss)
+    ## Add learning rate decay
+    global_step = tf.Variable(0) # count the number of steps taken
+    ## Decay every 100000 steps with a base of 0.95:
+    learning_rate = tf.train.exponential_decay(0.5, global_step, 100000, 0.95)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss,
+                                                                          global_step=global_step)
     
     ## Prediction for training, validation and test data
     train_pred = tf.nn.softmax(logits)
-#     valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
-#     test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
     
-    valid_hidden = tf.nn.relu(tf.matmul(tf_valid_dataset, weights_h) + biases_h)
-    valid_logits = tf.matmul(valid_hidden, weights_o) + biases_o
-    valid_pred = tf.nn.softmax(valid_logits)
-     
-    test_hidden = tf.nn.relu(tf.matmul(tf_test_dataset, weights_h) + biases_h)
-    test_logits = tf.matmul(test_hidden, weights_o) + biases_o
-    test_pred = tf.nn.softmax(test_logits)
-
+    if has_hidden_layer:
+        valid_hidden = tf.nn.relu(tf.matmul(tf_valid_dataset, weights_h) + biases_h)
+        valid_logits = tf.matmul(valid_hidden, weights_o) + biases_o
+        valid_pred = tf.nn.softmax(valid_logits)
+         
+        test_hidden = tf.nn.relu(tf.matmul(tf_test_dataset, weights_h) + biases_h)
+        test_logits = tf.matmul(test_hidden, weights_o) + biases_o
+        test_pred = tf.nn.softmax(test_logits)
+    else:
+        valid_pred = tf.nn.softmax(tf.matmul(tf_valid_dataset, weights) + biases)
+        test_pred = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
+        
 ## Let's run it
 num_steps = 3001
 
