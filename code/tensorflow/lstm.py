@@ -6,7 +6,6 @@ To train a LSTM character model over [Text8](http://mattmahoney.net/dc/textdata)
 @author: trucvietle
 '''
 
-import os
 import random
 import string
 import zipfile
@@ -147,8 +146,8 @@ def random_distribution():
 
 ## Simple LSTM model
 num_nodes = 64
-
 graph = tf.Graph()
+
 with graph.as_default():
     ## Parameters
     ## Input gate: input, previous output, and bias

@@ -28,6 +28,7 @@ print 'Data size', len(words)
 
 ## Build the dictionary and replace rare words with UNK token
 vocabulary_size = 50000
+
 def build_dataset(words):
     count = [['UNK', -1]]
     count.extend(collections.Counter(words).most_common(vocabulary_size-1))
@@ -48,7 +49,7 @@ def build_dataset(words):
     return data, count, dictionary, reverse_dictionary
 
 data, count, dictionary, reverse_dictionary = build_dataset(words)
-print 'Most common words (+UNK)', count[:5]
+print 'Most common words (+UNK)', count[:10]
 print 'Sample data', data[:10]
 del words # to reduce memory
 
@@ -78,10 +79,14 @@ def generate_batch(batch_size, num_skips, skip_window):
         data_index = (data_index + 1) % len(data)
     return batch, labels
 
-batch, labels = generate_batch(batch_size=8, num_skips=2, skip_window=1)
-for i in range(8):
-    print batch[i], '->', labels[i, 0]
-    print reverse_dictionary[batch[i]], '->', reverse_dictionary[labels[i, 0]]
+print('data:', [reverse_dictionary[di] for di in data[:8]])
+
+for num_skips, skip_window in [(2, 1), (4, 2)]:
+    data_index = 0
+    batch, labels = generate_batch(batch_size=8, num_skips=num_skips, skip_window=skip_window)
+    print('\nwith num_skips = %d and skip_window = %d:' % (num_skips, skip_window))
+    print('    batch:', [reverse_dictionary[bi] for bi in batch])
+    print('    labels:', [reverse_dictionary[li] for li in labels.reshape(8)])
 
 ## Train a skip-gram model
 batch_size = 128
@@ -98,8 +103,7 @@ valid_examples = np.array(random.sample(xrange(valid_window), valid_size))
 num_sampled = 64 # number of negative examples in the sample
 
 graph = tf.Graph()
-
-with graph.as_default():
+with graph.as_default(), tf.device('/cpu:0'):
     ## Input data
     train_dataset = tf.placeholder(tf.int32, shape=[batch_size])
     train_labels = tf.placeholder(tf.int32, shape=[batch_size, 1])
@@ -119,9 +123,13 @@ with graph.as_default():
                                                      train_labels, num_sampled, vocabulary_size))
     
     ## Optimizer
+    # Note: The optimizer will optimize the softmax_weights AND the embeddings.
+    # This is because the embeddings are defined as a variable quantity and the
+    # optimizer's `minimize` method will by default modify all variable quantities 
+    # that contribute to the tensor it is passed.
     optimizer = tf.train.AdagradOptimizer(1.0).minimize(loss)
     
-    ## Compute the similarity between minibatch examples and all embeddings
+    ## Compute the similarity between mini-batch examples and all embeddings
     ## We use cosine distance
     norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
     normalized_embeddings = embeddings / norm
