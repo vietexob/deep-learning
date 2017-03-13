@@ -25,7 +25,7 @@ with open(pickle_file, 'rb') as f:
     print 'Test set', test_dataset.shape, test_labels.shape
 
 ## Reformat into TensorFlow-friendly shape:
-## - Convolutions need the image data formatted as a cube
+## - Convolutions need the image data formatted as a cube (width * height * # channels)
 ## - Labels as float one-hot encoding
 image_size = 28
 num_labels = 10
@@ -49,10 +49,11 @@ def accuracy(predictions, labels):
 ## Build a small network with two convolutional layers, followed by one fully connected layer.
 ## Convolutional networks are computationally expensive, so we limit its depths and the number of
 ## fully connected nodes.
-batch_size = 16
-patch_size = 5
-depth = 16
-num_hidden = 64
+batch_size = 16 # the number of samples that are propagated through the network
+patch_size = 5 # size of the moving, convolutional patch
+depth = 16 # depth of the convnets
+num_hidden = 64 # number of fully connected nodes
+use_max_pool = True # this actually reduces the test accuracy!
 
 def max_pool_2x2(x):
     '''
@@ -66,7 +67,6 @@ with graph.as_default():
     ## Input data
     tf_train_dataset = tf.placeholder(tf.float32, shape=(batch_size, image_size, image_size, num_channels))
     tf_train_labels = tf.placeholder(tf.float32, shape=(batch_size, num_labels))
-    
     tf_valid_dataset = tf.constant(valid_dataset)
     tf_test_dataset = tf.constant(test_dataset)
     
@@ -77,39 +77,36 @@ with graph.as_default():
     layer2_weights = tf.Variable(tf.truncated_normal([patch_size, patch_size, depth, depth], stddev=0.1))
     layer2_biases = tf.Variable(tf.constant(1.0, shape=[depth]))
     
-    layer3_weights = tf.Variable(tf.truncated_normal([image_size/4*image_size/4*depth, num_hidden], stddev=0.1))
+    layer3_weights = tf.Variable(tf.truncated_normal([image_size // 4 * image_size // 4 * depth, num_hidden], stddev=0.1))
     layer3_biases = tf.Variable(tf.constant(1.0, shape=[num_hidden]))
     
+    ## The fully connected layer
     layer4_weights = tf.Variable(tf.truncated_normal([num_hidden, num_labels], stddev=0.1))
     layer4_biases = tf.Variable(tf.constant(1.0, shape=[num_labels]))
     
     ## Model
     def model(data):
-        ## Use stride 2 to reduce the dimensionality
-#         conv = tf.nn.conv2d(data, layer1_weights, [1, 2, 2, 1], padding='SAME')
-        h_pool1 = max_pool_2x2(data)
-#         hidden = tf.nn.relu(conv + layer1_biases)
-        hidden = tf.nn.relu(h_pool1 + layer1_biases)
-        
-#         conv = tf.nn.conv2d(hidden, layer2_weights, [1, 2, 2, 1], padding='SAME')
-        h_pool2 = max_pool_2x2(hidden)
-#         hidden = tf.nn.relu(conv + layer2_biases)
-        hidden = tf.nn.relu(h_pool2 + layer2_biases)
-        
-#         shape = hidden.get_shape().as_list()
-        shape = h_pool2.get_shape().as_list()
+        ## Use stride 2 to reduce the dimensionality        
+        if use_max_pool:
+            h_pool1 = max_pool_2x2(data)
+            hidden = tf.nn.relu(h_pool1 + layer1_biases)
+            h_pool2 = max_pool_2x2(hidden)
+            hidden = tf.nn.relu(h_pool2 + layer2_biases)
+            shape = h_pool2.get_shape().as_list()
+        else:
+            conv = tf.nn.conv2d(data, layer1_weights, [1, 2, 2, 1], padding='SAME')
+            hidden = tf.nn.relu(conv + layer1_biases)
+            conv = tf.nn.conv2d(hidden, layer2_weights, [1, 2, 2, 1], padding='SAME')
+            hidden = tf.nn.relu(conv + layer2_biases)
+            shape = hidden.get_shape().as_list()
+            
         reshape = tf.reshape(hidden, [shape[0], shape[1] * shape[2] * shape[3]])
         hidden = tf.nn.relu(tf.matmul(reshape, layer3_weights) + layer3_biases)
-        
-        ## Add dropout to reduce overfitting: turn dropout on during training and off during testing
-#         keep_prob = tf.placeholder('float')
-#         hidden_drop = tf.nn.dropout(hidden, keep_prob)
-        
         return tf.matmul(hidden, layer4_weights) + layer4_biases    
     
     ## Training computation
     logits = model(tf_train_dataset)
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits, tf_train_labels))
+    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf_train_labels))
     
     ## Optimizer
     optimizer = tf.train.GradientDescentOptimizer(0.05).minimize(loss)
@@ -120,6 +117,7 @@ with graph.as_default():
     test_prediction = tf.nn.softmax(model(tf_test_dataset))
 
 num_steps = 1001
+
 with tf.Session(graph=graph) as session:
     tf.initialize_all_variables().run()
     print 'Initialized'
@@ -135,4 +133,5 @@ with tf.Session(graph=graph) as session:
             print 'Minibatch loss at step', step, ':', l
             print 'Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels)
             print 'Validation accuracy: %.1f%%' % accuracy(valid_prediction.eval(), valid_labels)
+            
     print 'Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), test_labels)
