@@ -1,6 +1,8 @@
 '''
 Created on 21 Mar 2017
 
+    To demonstrate TensorFlow’s high-level machine learning API (tf.contrib.learn).
+
 @author: trucvietle
 '''
 

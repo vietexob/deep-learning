@@ -30,6 +30,3 @@ my_grid <- expand.grid(.decay = c(0.5, 0.1), .size = c(4, 5, 6))
 nnet_fit <- train(medv / 50 ~ ., data = BostonHousing, method = 'nnet', maxit = 1000,
                   tuneGrid = my_grid, trace = FALSE)
 print(nnet_fit)
-
-lm_fit <- train(medv / 50 ~ ., data = BostonHousing, method = 'lm')
-print(lm_fit)
