@@ -35,7 +35,7 @@ def input_fn(dataset):
     label values as tensor.
     '''
     
-    feature_cols = {k: tf.constant(dataset[k].values) for k in features}
+    feature_cols = {k: tf.constant(dataset[k].values, shape=[dataset[k].size, 1]) for k in features}
     labels = tf.constant(dataset[label].values)
     return feature_cols, labels
 

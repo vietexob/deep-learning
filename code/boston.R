@@ -14,7 +14,7 @@ lm_pred <- predict(lm_fit)
 print(mean((lm_pred - BostonHousing$medv)^2))
 plot(BostonHousing$medv, lm_pred, main = 'LM Pred vs. Actual', xlab = 'Actual')
 
-## Model using neural network
+## Model using neural network: one hidden layer with 3 neurons
 ## Scale the input to get 0-1 range
 nnet_fit <- nnet(medv / 50 ~ ., data = BostonHousing, size = 3)
 
