@@ -1,8 +1,6 @@
 '''
 Created on 21 Mar 2017
 
-    To demonstrate TensorFlow’s high-level machine learning API (tf.contrib.learn).
-
 @author: trucvietle
 '''
 
@@ -12,14 +10,15 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
+import shutil
 
 ## Load the training and test sets (there are 4 features)
-iris_training = '../../data/iris_training.csv'
+iris_training = '../../data/iris/iris_training.csv'
 training_set = tf.contrib.learn.datasets.base.load_csv_with_header(filename=iris_training,
                                                                    target_dtype=np.int,
                                                                    features_dtype=np.float32)
 
-iris_test = '../../data/iris_test.csv'
+iris_test = '../../data/iris/iris_test.csv'
 test_set = tf.contrib.learn.datasets.base.load_csv_with_header(filename=iris_test,
                                                                target_dtype=np.int,
                                                                features_dtype=np.float32)
@@ -38,3 +37,6 @@ classifier.fit(x=training_set.data, y=training_set.target, steps=2000)
 ## Evaluate model accuracy
 accuracy_score = classifier.evaluate(x=test_set.data, y=test_set.target)['accuracy']
 print('Accuracy: {0:f}'.format(accuracy_score))
+
+## Remove the temp directory
+shutil.rmtree('../../data/iris_model')

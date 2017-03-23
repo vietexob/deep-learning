@@ -15,6 +15,7 @@ import itertools
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import shutil
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -22,9 +23,9 @@ columns = ["crim", "zn", "indus", "nox", "rm", "age", "dis", "tax", "ptratio", "
 features = ["crim", "zn", "indus", "nox", "rm", "age", "dis", "tax", "ptratio"]
 label = ['medv']
 
-training_set = pd.read_csv('../../data/boston_train.csv', skipinitialspace=True, skiprows=1, names=columns)
-test_set = pd.read_csv('../../data/boston_test.csv', skipinitialspace=True, skiprows=1, names=columns)
-pred_set = pd.read_csv('../../data/boston_predict.csv', skipinitialspace=True, skiprows=1, names=columns)
+training_set = pd.read_csv('../../data/boston/boston_train.csv', skipinitialspace=True, skiprows=1, names=columns)
+test_set = pd.read_csv('../../data/boston/boston_test.csv', skipinitialspace=True, skiprows=1, names=columns)
+pred_set = pd.read_csv('../../data/boston/boston_predict.csv', skipinitialspace=True, skiprows=1, names=columns)
 
 feature_cols = [tf.contrib.layers.real_valued_column(k) for k in features]
 regressor = tf.contrib.learn.DNNRegressor(feature_columns=feature_cols, hidden_units=[10, 10],
@@ -64,3 +65,6 @@ print('MAE = {0:f}'.format(mae))
 y = regressor.predict(input_fn=lambda: input_fn(pred_set))
 predictions = list(itertools.islice(y, 6))
 print('Predictions: {}'.format(str(predictions)))
+
+## Remove the temp directory
+shutil.rmtree('../../data/boston_model')
