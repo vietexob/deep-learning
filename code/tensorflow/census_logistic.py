@@ -8,15 +8,15 @@ import tempfile
 import pandas as pd
 import tensorflow as tf
 
-columns = ["age", "workclass", "fnlwgt", "education", "education_num", "marital_status", "occupation",
+COLUMNS = ["age", "workclass", "fnlwgt", "education", "education_num", "marital_status", "occupation",
            "relationship", "race", "gender", "capital_gain", "capital_loss", "hours_per_week",
            "native_country", "income_bracket"]
 
 ## Read the training and test data
 train_file = '../../data/census/adult.data'
 test_file = '../../data/census/adult.test'
-df_train = pd.read_csv(train_file, names=columns, skipinitialspace=True)
-df_test = pd.read_csv(test_file, names=columns, skipinitialspace=True, skiprows=1)
+df_train = pd.read_csv(train_file, names=COLUMNS, skipinitialspace=True)
+df_test = pd.read_csv(test_file, names=COLUMNS, skipinitialspace=True, skiprows=1)
 
 ## Construct a label column named "label" whose value is 1 if the income is over 50K, and 0 otherwise
 LABEL_COL = 'label'
@@ -44,7 +44,7 @@ def input_fn(df):
     feature_cols = dict(con_cols.items() + cat_cols.items())
     ## Convert label column into constant tensor
     label = tf.constant(df[LABEL_COL].values)
-    ## Return the feature columns and the label
+    ## Return the feature COLUMNS and the label
     return feature_cols, label
 
 def train_input_fn():
