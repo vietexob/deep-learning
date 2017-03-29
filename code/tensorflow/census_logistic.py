@@ -1,6 +1,10 @@
 '''
 Created on 23 Mar 2017
 
+    A simple logistic regression model to predict the (binary) income level based on a mixed
+    bag of categorical/continuous/interaction variables with regularization.
+    Accuracy ~ 83%. Precision ~ 0.70, Recall ~ 0.47. AUC ~ 0.87.
+    
 @author: trucvietle
 '''
 
@@ -54,6 +58,7 @@ def eval_input_fn():
     return input_fn(df_test)
 
 ## Feature engineering
+## Categorical variables
 gender = tf.contrib.layers.sparse_column_with_keys(column_name='gender', keys=['Female', 'Male'])
 education = tf.contrib.layers.sparse_column_with_hash_bucket('education', hash_bucket_size=1000)
 relationship = tf.contrib.layers.sparse_column_with_hash_bucket('relationship', hash_bucket_size=100)
@@ -82,6 +87,7 @@ age_buckets_x_education_x_occupation = tf.contrib.layers.crossed_column([age_buc
 model_dir = tempfile.mkdtemp()
 feature_columns = [gender, native_country, education, occupation, workclass, marital_status, race,
                    age_buckets, education_x_occupation, age_buckets_x_education_x_occupation]
+
 # model = tf.contrib.learn.LinearClassifier(feature_columns=feature_columns, model_dir = model_dir)
 ## Add regularization
 model = tf.contrib.learn.LinearClassifier(
@@ -91,7 +97,7 @@ model = tf.contrib.learn.LinearClassifier(
                                           model_dir=model_dir)
 
 ## Train and evaluate the model
-model.fit(input_fn=train_input_fn, steps=200)
+model.fit(input_fn=train_input_fn, steps=500)
 results = model.evaluate(input_fn=eval_input_fn, steps=1)
 for key in sorted(results):
     print '%s: %s' % (key, results[key])

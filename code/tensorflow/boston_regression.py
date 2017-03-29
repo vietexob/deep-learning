@@ -1,6 +1,8 @@
 '''
 Created on 21 Mar 2017
 
+    A two-layer NN regression model (1 output unit). Each hidden layer has 10 neurons.
+    
 @author: trucvietle
 '''
 

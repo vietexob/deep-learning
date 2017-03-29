@@ -1,6 +1,9 @@
 '''
 Created on 21 Mar 2017
 
+    A multi-layer perceptron model for classical classification problem.
+    Three hidden layers, and output has 3 classes. Accuracy ~ 0.97.
+    
 @author: trucvietle
 '''
 
