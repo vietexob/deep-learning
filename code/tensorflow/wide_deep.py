@@ -80,7 +80,7 @@ CON_COL = ["age", "education_num", "capital_gain", "capital_loss", "hours_per_we
 def input_fn(df):
     ## Create a dict mapping from each continuous feature col name (k) to the values
     ## of that col stored in a constant tensor. 
-    con_cols = {k: tf.constant(df[k].values) for k in CON_COL}
+    con_cols = {k: tf.constant(df[k].values, shape=[df[k].size, 1]) for k in CON_COL}
     
     ## Create a dict mapping from each categorical feature col name (k) to the values
     ## of that col stored in a sparse tensor

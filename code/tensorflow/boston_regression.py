@@ -41,6 +41,7 @@ def input_fn(dataset):
     
     feature_cols = {k: tf.constant(dataset[k].values, shape=[dataset[k].size, 1]) for k in features}
     labels = tf.constant(dataset[label].values)
+    
     return feature_cols, labels
 
 ## Train the regressor
