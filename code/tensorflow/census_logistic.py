@@ -20,7 +20,6 @@ COLUMNS = ["age", "workclass", "fnlwgt", "education", "education_num", "marital_
 train_file = '../../data/census/adult.data'
 test_file = '../../data/census/adult.test'
 df_train = pd.read_csv(train_file, names=COLUMNS, skipinitialspace=True)
-print(df_train.head())
 df_test = pd.read_csv(test_file, names=COLUMNS, skipinitialspace=True, skiprows=1)
 
 ## Construct a label column named "label" whose value is 1 if the income is over 50K, and 0 otherwise
@@ -93,9 +92,10 @@ feature_columns = [gender, native_country, education, occupation, workclass, mar
 ## Add regularization
 model = tf.contrib.learn.LinearClassifier(
     feature_columns=feature_columns,
-    optimizer = tf.train.FtrlOptimizer(
-        learning_rate = 0.1, l1_regularization_strength=1., l2_regularization_strength=1.),
-                                          model_dir=model_dir)
+    optimizer = tf.train.FtrlOptimizer(learning_rate = 0.1,
+                                       l1_regularization_strength=1.,
+                                       l2_regularization_strength=1.),
+    model_dir=model_dir)
 
 ## Train and evaluate the model
 model.fit(input_fn=train_input_fn, steps=500)
