@@ -90,8 +90,10 @@ def input_fn(df):
     
     ## Merge two dictionaries into one
     feature_cols = dict(con_cols.items() + cat_cols.items())
+    
     ## Convert label column into constant tensor
     label = tf.constant(df[LABEL_COL].values)
+    
     ## Return the feature COLUMNS and the label
     return feature_cols, label
 

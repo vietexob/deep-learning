@@ -20,6 +20,7 @@ COLUMNS = ["age", "workclass", "fnlwgt", "education", "education_num", "marital_
 train_file = '../../data/census/adult.data'
 test_file = '../../data/census/adult.test'
 df_train = pd.read_csv(train_file, names=COLUMNS, skipinitialspace=True)
+print(df_train.head())
 df_test = pd.read_csv(test_file, names=COLUMNS, skipinitialspace=True, skiprows=1)
 
 ## Construct a label column named "label" whose value is 1 if the income is over 50K, and 0 otherwise
