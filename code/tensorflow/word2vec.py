@@ -209,7 +209,6 @@ try:
     
     tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
     plot_only = 500
-    # TODO: Fix ValueError: array must not contain infs or NaNs in final_embeddings
     low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only, :])
     labels = [reverse_dictionary[i] for i in xrange(plot_only)]
     plot_with_labels(low_dim_embs, labels)
