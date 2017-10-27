@@ -75,7 +75,6 @@ def evaluate(features, support, labels, mask, placeholders):
 
 # Initialize variables
 sess.run(tf.global_variables_initializer())
-
 cost_val = []
 
 # Train model
