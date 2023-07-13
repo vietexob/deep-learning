@@ -1,4 +1,17 @@
+# Original
 .DS_Store
 *.pickle
 *.zip
 .Rproj.user
+
+# Byte-compiled/optimized/DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter notebooks
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
