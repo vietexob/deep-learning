@@ -3,6 +3,7 @@
 *.pickle
 *.zip
 .Rproj.user
+*.env
 
 # Byte-compiled/optimized/DLL files
 __pycache__/
