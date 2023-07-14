@@ -4,6 +4,7 @@
 *.zip
 .Rproj.user
 *.env
+docs/
 
 # Byte-compiled/optimized/DLL files
 __pycache__/
