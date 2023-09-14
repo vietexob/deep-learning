@@ -1,7 +1,9 @@
 # Original
 .DS_Store
 *.pickle
+*.pkl
 *.zip
+*.bin
 .Rproj.user
 *.env
 docs/
