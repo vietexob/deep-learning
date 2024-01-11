@@ -6,6 +6,7 @@
 *.bin
 .Rproj.user
 *.env
+*.jsonl
 docs/
 
 # Byte-compiled/optimized/DLL files
