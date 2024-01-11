@@ -7,7 +7,10 @@
 .Rproj.user
 *.env
 *.jsonl
+
+# Directories
 docs/
+fine_tuning_llm/lamini_docs_3_steps/
 
 # Byte-compiled/optimized/DLL files
 __pycache__/
