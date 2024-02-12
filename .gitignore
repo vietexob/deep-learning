@@ -7,10 +7,14 @@
 .Rproj.user
 *.env
 *.jsonl
+*.csv
+*.txt
+*.log
 
 # Directories
 docs/
 fine_tuning_llm/lamini_docs_3_steps/
+pinecone/data/
 
 # Byte-compiled/optimized/DLL files
 __pycache__/
