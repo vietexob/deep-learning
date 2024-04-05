@@ -9,8 +9,9 @@ import requests
 import json
 
 # Initailize global variables
-_ = load_dotenv(find_dotenv())
+_ = load_dotenv(find_dotenv("env_vars.env"))
 # warnings.filterwarnings('ignore')
+
 url = f"{os.getenv('DLAI_TOGETHER_API_BASE', 'https://api.together.xyz')}/inference"
 headers = {
         "Authorization": f"Bearer {os.getenv('TOGETHER_API_KEY')}",
