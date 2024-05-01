@@ -1,9 +1,8 @@
 import os
-from dotenv import load_dotenv, find_dotenv     
 
+from dotenv import load_dotenv, find_dotenv     
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage
-
 
 api_key = None
 # dlai_endpoint = None
@@ -58,6 +57,7 @@ def get_text_embedding(txt):
 import requests
 from bs4 import BeautifulSoup
 import re
+
 def get_web_article_text(url, file_save_name=None):
 
     response = requests.get(url)
