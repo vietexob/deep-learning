@@ -4,9 +4,10 @@ import requests
 from PIL import Image
 
 import warnings
+
 # Ignore specific UserWarnings related to max_length in transformers
-warnings.filterwarnings("ignore", 
-    message=".*Using the model-agnostic default `max_length`.*")
+warnings.filterwarnings("ignore",
+                        message=".*Using the model-agnostic default `max_length`.*")
 
 class DummyModel(nn.Module):
   """
@@ -14,6 +15,7 @@ class DummyModel(nn.Module):
   with two blocks of a linear layer followed by a layer
   norm layer.
   """
+
   def __init__(self):
     super().__init__()
 
