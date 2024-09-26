@@ -17,6 +17,7 @@ def parse():
     '''
     Parse command/terminal line.
     '''
+    
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
         pass
     parser = ArgumentParser(formatter_class=CustomFormatter,
@@ -34,6 +35,7 @@ def build_environment(nrow=3, ncol=4, goal_reward=1, penalty=-1):
     '''
     Sets up the MDP environment.
     '''
+    
     ## Set the initial rewards
     global rewards
     rewards = np.zeros(shape=(nrow, ncol))
@@ -92,11 +94,12 @@ def build_environment(nrow=3, ncol=4, goal_reward=1, penalty=-1):
     action_values['S'] = [1, 0]
     action_values['E'] = [0, 1]
     action_values['W'] = [0, -1]
-        
+    
 def act(cur_state, action):
     '''
     Moves the agent through the states based on action taken.
     '''
+    
     if cur_state == wall_state:
         sys.exit('Cannot enter wall state!')
     
@@ -178,6 +181,7 @@ def get_transition_matrix(policy):
     '''
     Computes an (|S|x|S|) transition matrix for the give policy.
     '''
+    
     transition_matrix = np.zeros(shape=(len(states), len(states)))
     for state in states:
         ## The probabilities of transition to the next states given the current state and action
@@ -207,6 +211,7 @@ def policy_iteration(nrow=3, ncol=4, gamma=1, n_iter=1000):
     '''
     Implements the policy iteration algorithm.
     '''
+    
     ## Initialize a random policy
     policy = np.chararray(shape=(nrow, ncol))
     policy[goal_state] = '_'
@@ -279,6 +284,5 @@ if __name__ == '__main__':
 #     policy = value_iteration(nrow, ncol, goal_reward=goal_reward, penalty=penalty,
 #                              gamma=gamma, n_iter=1000)
     policy = policy_iteration(nrow, ncol, gamma=gamma, n_iter=1000)
-    print policy
-    print values
-    
+    print(policy)
+    print(values)

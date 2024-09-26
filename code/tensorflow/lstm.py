@@ -55,6 +55,7 @@ print id2char(1), id2char(26), id2char(0)
 ## Function to generate training batch for the LSTM model
 batch_size = 64
 num_unrollings = 10
+
 class BatchGenerator (object):
     def __init__(self, text, batch_size, num_unrollings):
         self._text = text
