@@ -7,7 +7,6 @@ import os
 import yaml
 import logging
 import time
-
 import transformers
 
 logger = logging.getLogger(__name__)
