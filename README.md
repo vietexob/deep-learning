@@ -1,2 +1,2 @@
 # deep-learning
-Playing around with Deep Learning and TensorFlow
+Personal collection of deep learning and LLM materials.
